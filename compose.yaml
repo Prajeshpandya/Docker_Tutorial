@@ -4,28 +4,50 @@ services:
     image: mongo
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - "27070:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+
     volumes:
-      - mongodb_data:/data/db
+      # - ./data:/data/db #host type of volume
+      - dockerTut-data:/data/db 
 
   backend22:
-    image: image_tag
+    build: 
+      context: ./myapp
+      dockerfile: Dockerfile
     container_name: backend_app
     depends_on:
       - mongodb
     ports:
       - "3000:3000"
     environment:
-      MONGO_URI: mongodb://mongodb:27017
+      MONGO_URI: mongodb://root:password@mongodb
       PORT: 3000
 
   nextcont:
-    image: nextjs
+    build: 
+      context: ./nextapp
+      dockerfile: Dockerfile
     ports: 
       - 4000:3000
+    environment: 
+      - SERVER_URL= http://backend22:3000
     depends_on: 
       - backend22
-      
+    # volumes:
+    #   - ./nextapp:/app #we directly mount it with the volume so we can dynamic changes without create image again 
+    develop:
+      watch:
+        - path: ./nextapp/package.json
+          action: rebuild
+        - path: ./nextapp/package-lock.json
+          action: rebuild 
+        - path: ./nextapp
+          target: /app
+          action: sync 
 
 volumes:
-  mongodb_data:
+  dockerTut-data:
+    driver: local

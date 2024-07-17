@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { errorMiddleware } from "./middlewares/error.js";
+import { errorMiddleware, TryCatch } from "./middlewares/error.js";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
@@ -30,8 +30,6 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-
-
 app.use(errorMiddleware);
 
 app.listen(port, () =>
@@ -41,14 +39,38 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
   },
+  email: {
+    type: String,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
-const createUser = async (name: string) => {
-  await User.create({ name });
 
-  console.log("USer Created@");
+const createUser = async (name: string, email: string) => {
+  try {
+    const newUser = await User.create({ name, email });
+    console.log("newUser : " + newUser);
+    return "User Created";
+  } catch (error) {
+    throw new Error("Something went wrong!");
+  }
 };
+
+app.get(
+  "/newuser",
+  TryCatch(async (req, res) => {
+    const name = req.query.name as string;
+    const email = req.query.email as string;
+
+    const message = await createUser(name, email);
+
+    res.json({
+      success: true,
+      message,
+    });
+  })
+);
+
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
@@ -58,12 +80,6 @@ app.get("/users", async (req, res) => {
       .status(500)
       .json({ success: false, message: "Error fetching users", error });
   }
-});
-
-mongoose.connection.once("open", () => {
-  createUser("Parth").catch((err) =>
-    console.error("User creation error:", err)
-  );
 });
 
 app.get("*", (req, res) => {
