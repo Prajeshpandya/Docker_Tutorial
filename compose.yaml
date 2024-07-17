@@ -19,5 +19,13 @@ services:
       MONGO_URI: mongodb://mongodb:27017
       PORT: 3000
 
+  nextcont:
+    image: nextjs
+    ports: 
+      - 4000:3000
+    depends_on: 
+      - backend22
+      
+
 volumes:
   mongodb_data:
