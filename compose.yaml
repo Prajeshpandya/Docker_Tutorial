@@ -1,31 +1,23 @@
 version: '3.8'
-name: dockertut
 services:
-    nodeapp:
-      image: dockertutapp
-      container_name: samplewala
-      environment: 
-        - PORT=4000
-        - MONGO_URI=mongodb://admin:password@mongodb
-      ports: 
-        - 4000:4000
-      depends_on:
-        - mongodb
-      networks:
-        - customnet
-    
-    mongodb:
-      image: mongo
-      container_name: dockertutDB
-      ports: 
-        - 27070:27017
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: password
-      networks:
-        - customnet
-networks:
-  dockernetwork:
-    driver: bridge
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
 
+  backend22:
+    image: image_tag
+    container_name: backend_app
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      PORT: 3000
 
+volumes:
+  mongodb_data:
